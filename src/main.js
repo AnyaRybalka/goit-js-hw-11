@@ -1,8 +1,6 @@
 import iziToast from "izitoast";
-// Додатковий імпорт стилів
 import "izitoast/dist/css/iziToast.min.css";
 import SimpleLightbox from "simplelightbox";
-// Додатковий імпорт стилів
 import 'simplelightbox/dist/simple-lightbox.min.css';
 import './css/styles.css';
 const API_KEY = '42158298-7ee19009037b01d9fe650f472';
@@ -22,23 +20,23 @@ function hideLoadingIndicator() {
 function createPictureMarkup({ webformatURL, likes, views, comments, downloads, largeImageURL }) {
     return `
         <a href="${largeImageURL}" class= "picture-link">
-            <img src = "${webformatURL}">
-            <div class= "picture-content">
-                <div class= "picture-text">
-                    <span class= "picture-title">Likes</span>
-                    <span class= "picture-sub-title">${likes}</span>
+            <img src="${webformatURL}">
+            <div class="picture-content">
+                <div class="picture-text">
+                    <span class="picture-title">Likes</span>
+                    <span class="picture-sub-title">${likes}</span>
                 </div>
-                <div class= "picture-text">
-                    <span class= "picture-title">Views</span>
-                    <span class= "picture-sub-title">${views}</span>
+                <div class="picture-text">
+                    <span class="picture-title">Views</span>
+                    <span class="picture-sub-title">${views}</span>
                 </div>
-                <div class= "picture-text">
-                    <span class= "picture-title">Comments</span>
-                    <span class= "picture-sub-title">${comments}</span>
+                <div class="picture-text">
+                    <span class="picture-title">Comments</span>
+                    <span class="picture-sub-title">${comments}</span>
                 </div>
-                <div class= "picture-text">
-                    <span class= "picture-title">Downloads</span>
-                    <span class= "picture-sub-title">${downloads}</span>
+                <div class="picture-text">
+                    <span class="picture-title">Downloads</span>
+                    <span class="picture-sub-title">${downloads}</span>
                 </div>
             </div>
         </a>`;
@@ -47,6 +45,7 @@ function handleSearch(event) {
     event.preventDefault();
     const form = event.currentTarget;
     const picture = form.elements.picture.value.trim();
+
     if (picture === "" || picture == null) {
         iziToast.error({
             message: `Sorry, there are no images matching your search query. Please, try again!`,
@@ -55,12 +54,11 @@ function handleSearch(event) {
         containerEl.innerHTML = "";
         return;
     }
-    showLoadingIndicator()
-    serchPicture(picture)
+    showLoadingIndicator();
+    searchPicture(picture)
         .then((data) => {
             if (data.hits && data.hits.length > 0) {
                 const hits = data.hits;
-
                 let markup = "";
                 for (const hit of hits) {
                     markup += createPictureMarkup(hit);
@@ -77,17 +75,22 @@ function handleSearch(event) {
                 iziToast.error({
                     message: `Sorry, there are no images matching your search query. Please, try again!`,
                     position: 'topRight'
-                    
-                })
-
+                });
             }
         })
         .finally(() => {
             hideLoadingIndicator();
-            form.reset()
+            form.reset();
+        })
+        .catch((error) => {
+            console.error('Fetch error:', error);
+            iziToast.error({
+                message: `An error occurred while fetching images. Please try again later.`,
+                position: 'topRight'
+            });
         });
 }
-function serchPicture(picture) {
+function searchPicture(picture) {
     const urlParams = new URLSearchParams({
         key: API_KEY,
         q: picture,
@@ -95,11 +98,21 @@ function serchPicture(picture) {
         orientation: "horizontal",
         safesearch: true
     });
-    return fetch(`${URL}?${urlParams}`).then((res) => {
-        if (!res.ok) {
-            throw new Error(res.statusText);
-        }
-        return res.json();
-    });
+    return fetch(`${URL}?${urlParams}`)
+        .then((res) => {
+            if (!res.ok) {
+                throw new Error(res.statusText);
+            }
+            return res.json();
+        })
+        .catch((error) => {
+            console.error('Fetch error:', error);
+            iziToast.error({
+                message: `An error occurred while fetching images. Please try again later.`,
+                position: 'topRight'
+            });
+            return Promise.reject(error);
+        });
 }
+
 
